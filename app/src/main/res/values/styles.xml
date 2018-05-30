@@ -11,4 +11,8 @@
         <item name="windowNoTitle">true</item>
     </style>
 
+    <style name="AppButton" parent="Theme.AppCompat.Light">
+        <item name="colorControlHighlight">@color/colorAccent</item>
+        <item name="colorButtonNormal">@color/colorPrimary</item>
+    </style>
 </resources>
