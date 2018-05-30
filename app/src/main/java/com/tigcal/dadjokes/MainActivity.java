@@ -1,5 +1,7 @@
 package com.tigcal.dadjokes;
 
+import android.content.Context;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
@@ -76,6 +78,8 @@ public class MainActivity extends AppCompatActivity {
                 getJoke();
             }
         });
+
+        displaySavedJoke();
     }
 
     @Override
@@ -95,7 +99,7 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public boolean onQueryTextChange(String s) {
-                if(EMPTY_STRING.equals(s)) {
+                if (EMPTY_STRING.equals(s)) {
                     jokeQuery = EMPTY_STRING;
                 }
                 return false;
@@ -103,6 +107,15 @@ public class MainActivity extends AppCompatActivity {
         });
 
         return true;
+    }
+
+    private void displaySavedJoke() {
+        String jokePref = getString(R.string.joke);
+
+        SharedPreferences preferences = getPreferences(Context.MODE_PRIVATE);
+        if (preferences.contains(jokePref)) {
+            displayJoke(preferences.getString(jokePref, getString(R.string.joke_tbd)));
+        }
     }
 
     private void getJoke() {
@@ -121,6 +134,7 @@ public class MainActivity extends AppCompatActivity {
                         if (joke != null) {
                             Log.d(TAG, joke.toString());
                             displayJoke(joke.joke());
+                            saveJoke(joke.joke());
                         } else {
                             displayErrorMessage();
                         }
@@ -146,6 +160,13 @@ public class MainActivity extends AppCompatActivity {
                 jokeTextView.setText(joke);
             }
         });
+    }
+
+    private void saveJoke(String joke) {
+        SharedPreferences preferences = getPreferences(Context.MODE_PRIVATE);
+        preferences.edit()
+                .putString(getString(R.string.joke), joke)
+                .apply();
     }
 
     private void displayErrorMessage() {
