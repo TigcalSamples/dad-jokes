@@ -1,0 +1,5 @@
+query GetJoke($query: String) {
+    joke(query: $query) {
+        joke
+    }
+}
