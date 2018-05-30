@@ -1,3 +1,9 @@
 <resources>
     <string name="app_name">Dad Jokes</string>
+
+    <string name="joke">Joke</string>
+    <string name="joke_another">Another Joke</string>
+    <string name="joke_search">Search Joke</string>
+    <string name="joke_tbd">Joke will be displayed here</string>
+
 </resources>
