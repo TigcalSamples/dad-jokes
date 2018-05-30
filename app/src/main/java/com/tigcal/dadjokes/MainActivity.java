@@ -172,7 +172,7 @@ public class MainActivity extends AppCompatActivity {
     private void displayErrorMessage() {
         progressBar.setVisibility(View.INVISIBLE);
 
-        Snackbar.make(jokeButton, "There was an error getting jokes. Please try again.",
+        Snackbar.make(jokeButton, getString(R.string.joke_error),
                 Snackbar.LENGTH_SHORT).show();
     }
 }
