@@ -3,10 +3,12 @@ package com.tigcal.dadjokes;
 import android.os.Bundle;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.SearchView;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ProgressBar;
@@ -29,12 +31,16 @@ import okhttp3.Request;
 public class MainActivity extends AppCompatActivity {
     private static final String TAG = "MainActivity";
     private static final String SERVER_URL = "https://icanhazdadjoke.com/graphql";
+    private static final String EMPTY_STRING = "";
 
     private ProgressBar progressBar;
     private TextView jokeTextView;
     private Button jokeButton;
+    private SearchView searchView;
 
     private ApolloClient apolloClient;
+
+    private String jokeQuery = EMPTY_STRING;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -77,6 +83,25 @@ public class MainActivity extends AppCompatActivity {
         MenuInflater inflater = getMenuInflater();
         inflater.inflate(R.menu.menu_main, menu);
 
+        final MenuItem myActionMenuItem = menu.findItem(R.id.action_search);
+        searchView = (SearchView) myActionMenuItem.getActionView();
+        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+            @Override
+            public boolean onQueryTextSubmit(String query) {
+                jokeQuery = query;
+                getJoke();
+                return false;
+            }
+
+            @Override
+            public boolean onQueryTextChange(String s) {
+                if(EMPTY_STRING.equals(s)) {
+                    jokeQuery = EMPTY_STRING;
+                }
+                return false;
+            }
+        });
+
         return true;
     }
 
@@ -84,20 +109,18 @@ public class MainActivity extends AppCompatActivity {
         progressBar.setVisibility(View.VISIBLE);
         jokeTextView.setVisibility(View.INVISIBLE);
 
-        //TODO if search=>add query
-        String query = "";
-
         apolloClient.query(GetJoke
                 .builder()
-                .query(query)
+                .query(jokeQuery)
                 .build())
                 .enqueue(new ApolloCall.Callback<GetJoke.Data>() {
 
                     @Override
                     public void onResponse(@Nonnull Response<GetJoke.Data> response) {
-                        if (response.data().joke() != null) {
-                            Log.d(TAG, response.data().joke().toString());
-                            displayJoke(response.data().joke().joke());
+                        GetJoke.Joke joke = response.data().joke();
+                        if (joke != null) {
+                            Log.d(TAG, joke.toString());
+                            displayJoke(joke.joke());
                         } else {
                             displayErrorMessage();
                         }
