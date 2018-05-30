@@ -16,19 +16,9 @@ import android.widget.Button;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
-import com.apollographql.apollo.ApolloCall;
 import com.apollographql.apollo.ApolloClient;
-import com.apollographql.apollo.api.Response;
-import com.apollographql.apollo.exception.ApolloException;
 import com.tigcal.dadjokes.graphql.GetJoke;
-
-import java.io.IOException;
-
-import javax.annotation.Nonnull;
-
-import okhttp3.Interceptor;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
+import com.tigcal.dadjokes.util.JokeManager;
 
 public class MainActivity extends AppCompatActivity {
     private static final String TAG = "MainActivity";
@@ -51,22 +41,6 @@ public class MainActivity extends AppCompatActivity {
 
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-
-        OkHttpClient okHttpClient = new OkHttpClient.Builder()
-                .addInterceptor(new Interceptor() {
-                    @Override
-                    public okhttp3.Response intercept(Chain chain) throws IOException {
-                        Request originalRequest = chain.request();
-                        Request.Builder builder = originalRequest.newBuilder().method(originalRequest.method(), originalRequest.body());
-                        builder.addHeader("User-Agent", "Dad Jokes (https://github.com/jomartigcal/dad-jokes)");
-                        return chain.proceed(builder.build());
-                    }
-                })
-                .build();
-        apolloClient = ApolloClient.builder()
-                .serverUrl(SERVER_URL)
-                .okHttpClient(okHttpClient)
-                .build();
 
         progressBar = findViewById(R.id.progress_bar);
         jokeTextView = findViewById(R.id.joke_text_view);
@@ -122,32 +96,24 @@ public class MainActivity extends AppCompatActivity {
         progressBar.setVisibility(View.VISIBLE);
         jokeTextView.setVisibility(View.INVISIBLE);
 
-        apolloClient.query(GetJoke
-                .builder()
-                .query(jokeQuery)
-                .build())
-                .enqueue(new ApolloCall.Callback<GetJoke.Data>() {
+        JokeManager.getJoke(jokeQuery, new JokeManager.JokeCallback() {
+            @Override
+            public void handleSuccess(GetJoke.Joke joke) {
+                if (joke != null) {
+                    Log.d(TAG, joke.toString());
+                    displayJoke(joke.joke());
+                    saveJoke(joke.joke());
+                } else {
+                    displayErrorMessage();
+                }
+            }
 
-                    @Override
-                    public void onResponse(@Nonnull Response<GetJoke.Data> response) {
-                        GetJoke.Joke joke = response.data().joke();
-                        if (joke != null) {
-                            Log.d(TAG, joke.toString());
-                            displayJoke(joke.joke());
-                            saveJoke(joke.joke());
-                        } else {
-                            displayErrorMessage();
-                        }
-
-                    }
-
-                    @Override
-                    public void onFailure(@Nonnull ApolloException e) {
-                        Log.e(TAG, "Get Joke Error: " + e.getMessage());
-                        e.printStackTrace();
-                        displayErrorMessage();
-                    }
-                });
+            @Override
+            public void handleFailure(Exception exception) {
+                Log.e(TAG, "Get Joke Error: " + exception.getMessage());
+                displayErrorMessage();
+            }
+        });
     }
 
     private void displayJoke(final String joke) {
